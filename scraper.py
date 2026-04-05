@@ -20,12 +20,12 @@ def extract_coords_from_url(url: str):
 
 def ensure_browser(progress_callback=None):
     """
-    Ensure Playwright browser binaries are installed.
-    Runs the playwright install command if needed.
+    Ensure Playwright browser binaries are ready.
+    In PyInstaller mode, the browser is bundled, so we just test if it launches.
     """
     try:
         if progress_callback:
-            progress_callback(0, 1, "🔍 جاري التحقق من متصفح Playwright...", False)
+            progress_callback(0, 1, "🔍 جاري التحقق من متصفح Playwright المدمج...", False)
             
         # Check if installed by trying to launch it briefly
         with sync_playwright() as p:
@@ -34,24 +34,8 @@ def ensure_browser(progress_callback=None):
         return True
     except Exception as e:
         if progress_callback:
-            progress_callback(0, 1, "⬇️ جاري تحميل المتصفح (قد يستغرق دقائق)...", False)
-            
-        try:
-            # Run playwright install
-            # In an EXE context, playwright install might be tricky,
-            # but we assume the standard Python environment for now
-            # PyInstaller users usually run `playwright install` beforehand
-            import sys
-            subprocess.check_call(
-                [sys.executable, "-m", "playwright", "install", "chromium"],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
-            return True
-        except Exception as install_err:
-            if progress_callback:
-                progress_callback(0, 1, f"❌ فشل تحميل المتصفح: {install_err}", True)
-            return False
+            progress_callback(0, 1, f"❌ فشل تشغيل المتصفح المدمج. تأكد من إعدادات البيلد: {e}", True)
+        return False
 
 
 def run_scrape_mode(rows: list, output_path: str, progress_callback, is_cancelled, progress_file="scrape_progress.json"):
@@ -67,7 +51,7 @@ def run_scrape_mode(rows: list, output_path: str, progress_callback, is_cancelle
         try:
             with open(progress_file, "r", encoding="utf-8") as f:
                 progress = json.load(f)
-            progress_callback(0, total, f"📂 تم استرجاع {len(progress)} موقع من جلسة سابقة.", False)
+            progress_callback(0, total, f"📂 Restored {len(progress)} locations from previous session.", False)
         except Exception:
             pass
             
@@ -78,7 +62,7 @@ def run_scrape_mode(rows: list, output_path: str, progress_callback, is_cancelle
     already_done = sum(1 for r in rows if r.get("Place_ID", "").strip() in progress)
     if already_done >= total:
         _write_output(rows, progress, output_path)
-        progress_callback(total, total, f"🎉 كل الأماكن تم جلبها مسبقاً! تم الحفظ في: {output_path}", False)
+        progress_callback(total, total, f"🎉 All locations fetched previously! Saved to: {output_path}", False)
         return
 
     success_count = 0
@@ -94,7 +78,7 @@ def run_scrape_mode(rows: list, output_path: str, progress_callback, is_cancelle
             
             for i, row in enumerate(rows):
                 if is_cancelled():
-                    progress_callback(i, total, "⚠️ تم الإلغاء بواسطة المستخدم (Cancelled by user)", True)
+                    progress_callback(i, total, "⚠️ Cancelled by user", True)
                     break
                     
                 pid = row.get("Place_ID", "").strip()
@@ -128,14 +112,14 @@ def run_scrape_mode(rows: list, output_path: str, progress_callback, is_cancelle
                     if lat:
                         success_count += 1
                         progress[pid] = {"lat": lat, "lng": lng, "name": name}
-                        progress_callback(i + 1, total, f"✅ بنجاح: {name[:30]} ({lat:.5f}, {lng:.5f})", False)
+                        progress_callback(i + 1, total, f"✅ Success: {name[:30]} ({lat:.5f}, {lng:.5f})", False)
                     else:
                         progress[pid] = {"lat": None, "lng": None, "name": name}
-                        progress_callback(i + 1, total, f"⚠️ لم يتم العثور: {name[:30]}", True)
+                        progress_callback(i + 1, total, f"⚠️ Not found: {name[:30]}", True)
                         
                 except Exception as e:
                     progress[pid] = {"lat": None, "lng": None, "name": name}
-                    progress_callback(i + 1, total, f"❌ خطأ: {name[:30]}", True)
+                    progress_callback(i + 1, total, f"❌ Error: {name[:30]}", True)
                     
                 # Save progress every 10 rows
                 if (i + 1) % 10 == 0:
@@ -147,7 +131,7 @@ def run_scrape_mode(rows: list, output_path: str, progress_callback, is_cancelle
             browser.close()
             
     except Exception as main_err:
-        progress_callback(0, total, f"❌ خطأ فادح في المتصفح: {main_err}", True)
+        progress_callback(0, total, f"❌ Fatal browser error: {main_err}", True)
         
     # Final save and write output
     with open(progress_file, "w", encoding="utf-8") as f:
@@ -155,7 +139,7 @@ def run_scrape_mode(rows: list, output_path: str, progress_callback, is_cancelle
         
     _write_output(rows, progress, output_path)
     if not is_cancelled():
-        progress_callback(total, total, f"🎉 اكتمل! تم العثور على إحداثيات {success_count} موقع. تم الحفظ: {output_path}", False)
+        progress_callback(total, total, f"🎉 Completed! Found coordinates for {success_count} locations. Saved: {output_path}", False)
 
 
 def _write_output(rows, progress, output_path):

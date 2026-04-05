@@ -1,2 +1,23 @@
+# Environments
 venv/
+env/
+.env
+
+# Compiled Python
 __pycache__/
+*.pyc
+
+# PyInstaller
+build/
+dist/
+*.spec
+
+# Build and Executable
+Geo_Decoder/
+*.exe
+*.tar.xz
+*.zip
+
+# Data outputs and progress files
+*.csv
+*.json

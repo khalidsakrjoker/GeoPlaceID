@@ -12,7 +12,7 @@ def read_input_csv(filepath):
     """
     rows = []
     if not os.path.exists(filepath):
-        raise FileNotFoundError(f"الملف غير موجود (File not found): {filepath}")
+        raise FileNotFoundError(f"File not found: {filepath}")
 
     with open(filepath, "r", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
@@ -23,7 +23,7 @@ def read_input_csv(filepath):
             if 'url' in reader.fieldnames and 'place_id' in reader.fieldnames:
                 pass
             else:
-                raise ValueError("الملف يجب أن يحتوي على عمود 'url' وعمود 'Place_ID'")
+                raise ValueError("File must contain 'url' and 'Place_ID' columns")
 
         for row in reader:
             url = row.get("url", "")

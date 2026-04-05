@@ -1,22 +1,27 @@
 @echo off
-echo ===================================================
-echo     GeoPlaceID - Windows Build Script
-echo ===================================================
-echo.
-echo Installing requirements...
-pip install -r requirements.txt
+echo ==========================================
+echo 1. Setting Playwright to local environment
+echo ==========================================
+set PLAYWRIGHT_BROWSERS_PATH=0
 
-echo.
-echo Installing Playwright browsers...
+echo ==========================================
+echo 2. Installing Chromium for Playwright...
+echo ==========================================
 playwright install chromium
 
-echo.
-echo Building Windows EXE...
-pyinstaller --noconfirm --onedir --windowed --name "GeoPlaceID" --add-data "venv\Lib\site-packages\customtkinter;customtkinter\" app.py
+echo ==========================================
+echo 3. Building the application as ONE FILE...
+echo ==========================================
+pyinstaller --noconfirm ^
+    --onefile ^
+    --windowed ^
+    --add-data "docs;docs" ^
+    --collect-all customtkinter ^
+    --collect-all s2sphere ^
+    --collect-all playwright ^
+    app.py
 
-echo.
-echo ===================================================
-echo Done! Check the 'dist\GeoPlaceID' folder.
-echo You can zip this folder and send it to the user.
-echo ===================================================
+echo ==========================================
+echo Build completed successfully!
+echo ==========================================
 pause

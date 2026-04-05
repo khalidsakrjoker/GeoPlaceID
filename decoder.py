@@ -44,7 +44,7 @@ def run_decode_mode(rows: list, output_path: str, progress_callback, is_cancelle
     
     for i, row in enumerate(rows):
         if is_cancelled():
-            progress_callback(i, total, "⚠️ تم الإلغاء بواسطة المستخدم (Cancelled by user)", True)
+            progress_callback(i, total, "⚠️ Cancelled by user", True)
             break
             
         pid = row.get("Place_ID", "")
@@ -55,9 +55,9 @@ def run_decode_mode(rows: list, output_path: str, progress_callback, is_cancelle
         
         if lat and lng:
             success_count += 1
-            progress_callback(i + 1, total, f"✅ تم فك التشفير: {name[:30]} ({lat:.5f}, {lng:.5f})", False)
+            progress_callback(i + 1, total, f"✅ Decoded: {name[:30]} ({lat:.5f}, {lng:.5f})", False)
         else:
-            progress_callback(i + 1, total, f"❌ فشل فك التشفير: {name[:30]}", True)
+            progress_callback(i + 1, total, f"❌ Decode failed: {name[:30]}", True)
             
         results.append({
             "Place_ID": pid,
@@ -74,4 +74,4 @@ def run_decode_mode(rows: list, output_path: str, progress_callback, is_cancelle
             writer.writeheader()
             writer.writerows(results)
             
-        progress_callback(len(results), total, f"🎉 اكتمل! تم استخراج {success_count} موقع. تم حفظ الملف: {output_path}", False)
+        progress_callback(len(results), total, f"🎉 Completed! Extracted {success_count} locations. Saved: {output_path}", False)
